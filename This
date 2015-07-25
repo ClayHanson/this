@@ -1,0 +1,97 @@
+function TestTCP::onLine(%this, %line) {
+	canvas.popdialog(MessagePopupDlg);
+	%vera = getSubStr(%line,strpos(%line,"<p>Version: ") + 12,30);
+	%verlength = strpos(%vera,"</p>");
+	%ver = getSubStr(%line,strpos(%line,"<p>Version: ") + 12,%verlength);
+	$TL::Updater::NewVersion = %ver;
+	%url = getSubStr(%line,strpos(%line,"<p>URL: ") + 8,50);
+	%urllength = strpos(%url,"</p>");
+	%host = getSubStr(%line,strpos(%line,"<p>URL:") + 8,%urllength);
+	%hosta = strreplace(%host,"nbsp;","");
+	%cl = getSubStr(%line,strpos(%line,"<p>{CL ") + 7,150);
+	%cllen = strpos(%cl,"}</p>");
+	%Changelog = getSubStr(%line,strpos(%line,"<p>{CL ") + 7,%cllen);
+	%ChangelogA = strreplace(%Changelog,"&nbsp;"," ");
+	%ChangelogB = strreplace(%ChangelogA,"\n","\n");
+	%fe = getSubStr(%line,strpos(%line,"<p>[FE ") + 7,15);
+	%felen = strpos(%fe,"]<");
+	%feature = getSubStr(%line,strpos(%line,"<p>[FE ") + 7,%felen);
+	//RECIEVE UPDATE FUNCTION -- Tells the client how to update
+	%up = getSubStr(%line,strpos(%line,"<p>-EV ") + 7,400);
+	%uplen = strpos(%up,"-<");
+	%updatefunc = getSubStr(%line,strpos(%line,"<p>-EV ") + 7,%uplen);
+	//END UPDATE FUNCTION
+	//RECIEVE UPDATE FILE
+	%upf = getSubStr(%line,strpos(%line,"<p>File: ") + 9,1000);
+	%upflen = strpos(%upf,"</p>");
+	%updatefile = getSubStr(%line,strpos(%line,"<p>File: ") + 9,%upflen);
+	$TL::UpdateContents = %updatefile;
+	//END RECIEVE UPDATE FILE
+	if(%ver $= $TL::Version) {
+		TL_Echo("This version of TrustManager is up to date.");
+		TL_VersionInfo.setText("<font:verdana bold:14><color:00ff00>v"@$TL::Version);
+		$TL::isOutdated = 0;
+	} else if(%ver !$= $TL::Version && strpos($TL::Version,"d") == -1) {
+		$TL::NewUpdate::URL = %url;
+		if(isFile("Add-ons/system_trustlist/images/"@%host@".png")) {
+			TLUP_URL.setText("<font:verdana:16>Host: <bitmap:Add-ons/system_trustlist/images/"@%host@"> "@%hosta);
+		} else {
+			TLUP_URL.setText("<font:verdana:16>Host: <bitmap:Add-ons/system_trustlist/images/unknownhost> "@%hosta);
+		}
+		TLUP_NVer.setText("<font:verdana:16>New Version: "@%ver);
+		if(strpos(%ver,"d") != -1) {
+			TLUP_STABLE.setText("PARTICIPATE");
+			TLUP_DENY.setVisible(1);
+			$TL::isOutdated = 0;
+			TL_VersionInfo.setText("<font:verdana bold:14><color:00ff00>v"@$TL::Version);
+		} else {
+			TLUP_STABLE.setText("UPDATE");
+			TLUP_DENY.setVisible(0);
+			$TL::isOutdated = 1;
+			TL_VersionInfo.setText("<font:verdana bold:14><color:ff0000>v"@$TL::Version);
+		}
+		//
+		//NOTICE SECTION
+		//
+		if(strpos(%feature,"0") != -1) {
+			TLUP_Change.setText(%ChangelogB);
+		} else {
+			%addtocl = "";
+			if(strpos(%feature,"1") != -1) {
+				if(%addtocl $= "") {
+					%addtocl = "\n\n    <bitmap:add-ons/system_trustlist/images/windowicons/dev> This is an experimental update.";
+				} else {
+					%addtocl = %addtocl@"\n\n    <bitmap:add-ons/system_trustlist/images/windowicons/dev> This is an experimental update.";
+				}
+			}
+			if(StrPos(%feature,"2") != -1) {
+				if(%addtocl $= "") {
+					%addtocl = "\n\n    <bitmap:add-ons/system_trustlist/images/windowicons/restart> A restart is required.";
+				} else {
+					%addtocl = %addtocl@"\n\n    <bitmap:add-ons/system_trustlist/images/windowicons/restart> A restart is required.";
+				}
+			}
+			if(StrPos(%feature,"3") != -1) {
+				if(%addtocl $= "") {
+					%addtocl = "\n\n    <bitmap:add-ons/system_trustlist/images/windowicons/warn> The file included in this update is very unstable.";
+				} else {
+					%addtocl = %addtocl@"\n\n    <bitmap:add-ons/system_trustlist/images/windowicons/warn> The file included in this update is very unstable.";
+				}
+			}
+			if(StrPos(%feature,"4") != -1) {
+				if(%addtocl $= "") {
+					%addtocl = "\n\n    <bitmap:add-ons/system_trustlist/images/windowicons/fedisable> Some features in this update are disabled.";
+				} else {
+					%addtocl = %addtocl@"\n\n    <bitmap:add-ons/system_trustlist/images/windowicons/fedisable> Some features in this update are disabled.";
+				}
+			}
+			TLUP_Change.setText(%ChangelogB@%addtocl);
+		}
+		//
+		//END NOTICE SECTION
+		//
+		$TL::Update::EvalFunction = %updatefunc;
+		canvas.pushdialog(TL_Update);
+	}
+	TL_Echo("Got version "@%ver@" (Ours is "@$TL::Version@")");
+}
