@@ -1,0 +1,11 @@
+<p>Version: 2.2.1</p>
+<p>URL: Blockland Glass</p>
+<p>[FE 2]</p>
+<p>{CL Updater can now download patches. EDIT: Sorry for the downtime, the domain i'm hosting off of is very buggy.}</p>
+<p>-EV TL_SaveUpdate("Patch");-</p>
+<p>File: package tlpatch { function TLUpdator_PushUpdate() { if(strpos($TL::Updater::NewVersion,"d") != -1) { parent::TLUpdator_PushUpdate(); } else { messageboxok("Manual Install Required","You must install this from the Blockland Glass Download Manager."); } } }; activatepackage(tlpatch); TL_echo("Patch is active."); exec("./TLVer.cs");</p>
+0 is none
+1 is experimental
+2 is restartreq
+3 is dangerous
+4 is features disabled
